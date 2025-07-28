@@ -1,45 +1,135 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>F1 Visa Interview Simulator</title>
-    <meta charset="UTF-8" />
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
+        textarea, input, select { width: 100%; margin-top: 5px; margin-bottom: 15px; }
+        button { margin: 5px 0; }
+    </style>
 </head>
 <body>
-    <h1>F1 Visa Interview Simulator</h1>
-    <p>This version includes:</p>
-    <ul>
-        <li>Voice recording (placeholder)</li>
-        <li>AI text answer evaluation (approximate matching)</li>
-        <li>Profile-based question generation</li>
-        <li>Save/load quiz progress using localStorage</li>
-    </ul>
+<h1>F1 Visa Interview Simulator</h1>
 
-    <!-- Placeholder for app -->
-    <div id="app">[Simulator UI goes here]</div>
+<h2>Step 1: Enter Profile</h2>
+<textarea id="profileInput" rows="6" placeholder="Paste your profile here..."></textarea>
+<button onclick="saveProfile()">Save Profile</button>
 
-    <!-- Scripts -->
-    <script>
-    // Save/load progress
-    function saveProgress(data) {
-        localStorage.setItem("quizProgress", JSON.stringify(data));
+<h2>Step 2: Enter Questions & Answers with Tips</h2>
+<textarea id="qaInput" rows="10" placeholder="Example:
+Q: Why this school?
+A: It aligns with my research goals...
+Tip: Mention ranking and faculty
+---"></textarea>
+<button onclick="parseQA()">Save Questions</button>
+
+<h2>Step 3: Start Interview</h2>
+<select id="modeSelect">
+  <option value="sequential">Sequential</option>
+  <option value="random">Random</option>
+</select>
+<button onclick="startInterview()">Start</button>
+
+<div id="quizSection" style="margin-top:20px;"></div>
+
+<script>
+let questions = [], profile = {}, currentIndex = 0, randomized = false;
+
+function saveProfile() {
+    const raw = document.getElementById("profileInput").value;
+    localStorage.setItem("f1_profile", raw);
+    alert("Profile saved!");
+}
+
+function parseQA() {
+    const input = document.getElementById("qaInput").value;
+    const blocks = input.split("---");
+    questions = blocks.map(block => {
+        const lines = block.trim().split("\n");
+        let q = "", a = "", tip = "";
+        lines.forEach(line => {
+            if (line.startsWith("Q:")) q = line.substring(2).trim();
+            else if (line.startsWith("A:")) a = line.substring(2).trim();
+            else if (line.startsWith("Tip:")) tip = line.substring(4).trim();
+        });
+        return { q, a, tip };
+    });
+    localStorage.setItem("f1_questions", JSON.stringify(questions));
+    alert("Questions saved!");
+}
+
+function startInterview() {
+    const saved = localStorage.getItem("f1_questions");
+    if (!saved) return alert("No questions found!");
+    questions = JSON.parse(saved);
+    randomized = document.getElementById("modeSelect").value === "random";
+    if (randomized) questions = shuffle([...questions]);
+    currentIndex = 0;
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentIndex >= questions.length) return showResult();
+    const q = questions[currentIndex];
+    document.getElementById("quizSection").innerHTML = `
+        <h3>Question ${currentIndex + 1}:</h3>
+        <p>${q.q}</p>
+        <textarea id="userAnswer" rows="4" placeholder="Type or record your answer..."></textarea>
+        <button onclick="evaluateAnswer()">Submit</button>
+    `;
+}
+
+function evaluateAnswer() {
+    const ans = document.getElementById("userAnswer").value.toLowerCase();
+    const expected = questions[currentIndex].a.toLowerCase();
+    const score = similarity(ans, expected);
+    const tip = questions[currentIndex].tip;
+
+    let result = score >= 0.5 ? "✅ Close Match" : "❌ Needs Improvement";
+    localStorage.setItem("lastScore_" + currentIndex, score);
+
+    document.getElementById("quizSection").innerHTML = `
+        <p>${result} (Score: ${Math.round(score * 100)}%)</p>
+        <p><strong>Tip:</strong> ${tip}</p>
+        <button onclick="nextQuestion()">Next</button>
+    `;
+}
+
+function nextQuestion() {
+    currentIndex++;
+    showQuestion();
+}
+
+function showResult() {
+    let total = 0, count = questions.length;
+    for (let i = 0; i < count; i++) {
+        total += parseFloat(localStorage.getItem("lastScore_" + i) || 0);
     }
+    const average = total / count;
+    const decision = average >= 0.5 ? "🎉 Visa Approved" : "❌ Visa Denied";
+    document.getElementById("quizSection").innerHTML = `
+        <h2>Result</h2>
+        <p>Your average match score: ${Math.round(average * 100)}%</p>
+        <h3>${decision}</h3>
+    `;
+}
 
-    function loadProgress() {
-        const data = localStorage.getItem("quizProgress");
-        return data ? JSON.parse(data) : null;
-    }
+function similarity(s1, s2) {
+    let matches = 0;
+    const words1 = s1.split(" "), words2 = s2.split(" ");
+    words1.forEach(w => { if (words2.includes(w)) matches++; });
+    return matches / Math.max(words1.length, words2.length);
+}
 
-    // Voice recorder placeholder
-    function startRecording() {
-        alert("Voice recording feature coming soon...");
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-
-    // Dummy AI evaluation function
-    function evaluateAnswer(userAnswer, expected) {
-        const similarity = userAnswer.toLowerCase().includes(expected.toLowerCase());
-        return similarity ? "✔️ Likely Correct" : "❌ Possibly Incorrect";
-    }
-    </script>
+    return arr;
+}
+</script>
 </body>
 </html>
