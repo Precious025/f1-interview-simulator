@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>F1 Visa Interview Simulator</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <h1>F1 Visa Interview Simulator</h1>
+
+  <div id="profile-section">
+    <h2>Enter Profile</h2>
+    <textarea id="profile" rows="8" placeholder="Paste your profile here..."></textarea>
+    <button onclick="saveProfile()">Save Profile</button>
+  </div>
+
+  <div id="qa-section">
+    <h2>Enter Your Questions and Answers</h2>
+    <textarea id="qa-input" rows="8" placeholder="One per line: Question | Answer | Tip"></textarea>
+    <button onclick="saveCustomQA()">Save Questions</button>
+  </div>
+
+  <div id="quiz-options">
+    <h3>Quiz Mode</h3>
+    <label><input type="radio" name="mode" value="random" checked/> Random</label>
+    <label><input type="radio" name="mode" value="sequential"/> Sequential</label>
+    <button onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <div id="quiz-section" style="display:none;">
+    <h2 id="current-question"></h2>
+    <textarea id="user-answer" rows="4" placeholder="Type or record your answer..."></textarea>
+    <button onclick="checkAnswer()">Submit Answer</button>
+    <p id="feedback"></p>
+    <p id="tip"></p>
+  </div>
+
+  <div id="result" style="display:none;">
+    <h2 id="visa-result"></h2>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
